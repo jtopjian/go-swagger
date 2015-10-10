@@ -12,6 +12,7 @@ import (
 
 	"github.com/go-swagger/go-swagger/spec"
 	"github.com/go-swagger/go-swagger/swag"
+	"github.com/kr/pretty"
 )
 
 // GenerateDefinition generates a model file for a schema defintion.
@@ -101,6 +102,8 @@ func (m *definitionGenerator) generateModel() error {
 }
 
 func makeGenDefinition(name, pkg string, schema spec.Schema, specDoc *spec.Document) (*GenDefinition, error) {
+	fmt.Println("making gen definition for", name)
+	pretty.Println(schema)
 	receiver := "m"
 	resolver := &typeResolver{
 		ModelsPackage: "",
@@ -363,7 +366,11 @@ func (sg *schemaGenContext) buildProperties() error {
 }
 
 func (sg *schemaGenContext) buildAllOf() error {
+	fmt.Println("building all of", sg.Schema.Type)
+	pretty.Println(sg.Schema)
 	for i, sch := range sg.Schema.AllOf {
+		fmt.Println("checking schema", i+1)
+		pretty.Println(sch)
 		comprop := sg.NewCompositionBranch(sch, i)
 		if err := comprop.makeGenSchema(); err != nil {
 			return err
@@ -757,7 +764,10 @@ func (sg *schemaGenContext) shortCircuitNamedRef() (bool, error) {
 }
 
 func (sg *schemaGenContext) liftSpecialAllOf() error {
+	fmt.Println("testing special all of", sg.Schema.Type)
 	// if there is only a $ref or a primitive and an x-isnullable schema then this is a nullable pointer
+	//
+	//
 	if len(sg.Schema.AllOf) > 0 {
 		var seenSchema int
 		var seenNullable bool

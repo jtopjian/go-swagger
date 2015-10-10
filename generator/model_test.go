@@ -2,6 +2,7 @@ package generator
 
 import (
 	"bytes"
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -1191,6 +1192,51 @@ func TestGenerateModel_WithTupleWithExtra(t *testing.T) {
 					assertInCode(t, "json.Unmarshal(val, &toadd)", res)
 					assertInCode(t, "json.Marshal(data)", res)
 					assertInCode(t, "for _, v := range m."+k+"FlagsTuple0Items", res)
+				}
+			}
+		}
+	}
+}
+
+func TestGenerateModel_WithAllOfAndDiscriminator(t *testing.T) {
+	specDoc, err := spec.Load("../fixtures/codegen/todolist.models.yml")
+	if assert.NoError(t, err) {
+		definitions := specDoc.Spec().Definitions
+		schema := definitions["Cat"]
+		genModel, err := makeGenDefinition("Cat", "models", schema, specDoc)
+		// b, _ := json.MarshalIndent(&genModel, "", "  ")
+		// fmt.Println(string(b))
+		if assert.NoError(t, err) && assert.Len(t, genModel.AllOf, 2) {
+
+			assert.True(t, genModel.AllOf[1].HasAdditionalProperties)
+			assert.True(t, genModel.IsComplexObject)
+			assert.Equal(t, "Cat", genModel.Name)
+			assert.Equal(t, "Cat", genModel.GoType)
+			buf := bytes.NewBuffer(nil)
+			err := modelTemplate.Execute(buf, genModel)
+			if assert.NoError(t, err) {
+				ct, err := formatGoFile("cat.go", buf.Bytes())
+				if assert.NoError(t, err) {
+					res := string(ct)
+					fmt.Println(res)
+					//assertInCode(t, "type WithAllOf struct {", res)
+					//assertInCode(t, "type WithAllOfAO2P2 struct {", res)
+					//assertInCode(t, "type WithAllOfAO3P3 struct {", res)
+					//assertInCode(t, "type WithAllOfParamsAnon struct {", res)
+					//assertInCode(t, "type WithAllOfAO4Tuple4 struct {", res)
+					//assertInCode(t, "type WithAllOfAO5Tuple5 struct {", res)
+					//assertInCode(t, "Notable", res)
+					//assertInCode(t, "Title string `json:\"title,omitempty\"`", res)
+					//assertInCode(t, "Body string `json:\"body,omitempty\"`", res)
+					//assertInCode(t, "Name string `json:\"name,omitempty\"`", res)
+					//assertInCode(t, "P0 float32 `json:\"-\"`", res)
+					//assertInCode(t, "P0 float64 `json:\"-\"`", res)
+					//assertInCode(t, "P1 strfmt.DateTime `json:\"-\"`", res)
+					//assertInCode(t, "P1 strfmt.Date `json:\"-\"`", res)
+					//assertInCode(t, "Opinion string `json:\"opinion,omitempty\"`", res)
+					//assertInCode(t, "WithAllOfAO5Tuple5Items []strfmt.Password `json:\"-\"`", res)
+					//assertInCode(t, "AO1 map[string]int32 `json:\"-\"`", res)
+					//assertInCode(t, "WithAllOfAO2P2 map[string]int64 `json:\"-\"`", res)
 				}
 			}
 		}
